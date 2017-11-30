@@ -1,41 +1,41 @@
 version: '2'
 services:
 
-  # The Application
+  # The Application，应用服务器，代码放这里
   app:
     build:
       context: ./
-      dockerfile: app.dockerfile
-    working_dir: /var/www
+      dockerfile: app.dockerfile #这个文件用来build我们的镜像，因为可以在这个文件里面详细的控制我们想要的模块
+    working_dir: /var/www #代码会放在容器中的这个目录下面，这样做，我们每次登陆到镜像的时候就会直接到这个目录，而不用cd到这个目录
     volumes:
-      - ./:/var/www
-    environment:
+      - ./:/var/www #这个是把当前的目录都挂载到容器中的／var/www中。这样我们在本地机器上这个目录下面的任何改动都会反应到镜像中
+    environment: #这里是为了和后面的数据库容器做匹配
       - "DB_PORT=3306"
       - "DB_HOST=database"
 
-  # The Web Server
+  # The Web Server，用来处理静态文件，传递要被php处理的请求
   web:
     build:
       context: ./
       dockerfile: web.dockerfile
     working_dir: /var/www
-    volumes_from:
+    volumes_from: #这里是重用了上面已经设置好的内容
       - app
     ports:
-      - 8080:80
+      - 8080:80 #这里我们把本地的8080端口和容器中的80端口相映射，这样的话我们就可以在开发环境访问0.0.0.0:8080
 
-  # The Database
+  # The Database，数据库服务器
   database:
     image: mysql:5.6
     volumes:
-      - dbdata:/var/lib/mysql
-    environment:
+      - dbdata:/var/lib/mysql #这里饮用了定义的卷，格式<name>:<dir>, 所以我们从dbdata卷挂载到／var/lib/mysql目录
+    environment: #设置环境变量，我们使用数据库的名字，用户的名字，密码和laravel提供的默认值一样，这样我们就不用修改了
       - "MYSQL_DATABASE=homestead"
       - "MYSQL_USER=homestead"
       - "MYSQL_PASSWORD=secret"
       - "MYSQL_ROOT_PASSWORD=secret"
     ports:
-        - "33061:3306"
+        - "33061:3306" #创建了一个额外的端口映射，本地的33061映射到容器中的3306.这个是用来允许外部工具更容易访问数据库
 
-volumes:
+volumes: #这里我们创建了一个命名的卷dbdata，后面的冒号是故意放这边的，因为yaml需要这样的格式
   dbdata:
