@@ -180,7 +180,9 @@ return [
         Barryvdh\Cors\ServiceProvider::class,
         Rebing\GraphQL\GraphQLServiceProvider::class,
         Tymon\JWTAuth\Providers\JWTAuthServiceProvider::class,
-        Graphiql\GraphiqlServiceProvider::class
+        Graphiql\GraphiqlServiceProvider::class,
+
+        PragmaRX\Google2FALaravel\ServiceProvider::class,
 
     ],
 
@@ -232,7 +234,8 @@ return [
         'View' => Illuminate\Support\Facades\View::class,
         'GraphQL' => 'Rebing\GraphQL\Support\Facades\GraphQL',
         'JWTAuth' => 'Tymon\JWTAuth\Facades\JWTAuth',
-        'JWTFactory' => 'Tymon\JWTAuth\Facades\JWTFactory'
+        'JWTFactory' => 'Tymon\JWTAuth\Facades\JWTFactory',
+        'Google2FA' => PragmaRX\Google2FALaravel\Facade::class,
     ],
 
 ];

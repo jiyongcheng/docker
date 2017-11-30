@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\User;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 
@@ -20,7 +21,9 @@ class RegisterController extends Controller
     |
     */
 
-    use RegistersUsers;
+    use RegistersUsers {
+        register as registration;
+    }
 
     /**
      * Where to redirect users after registration.
@@ -66,6 +69,43 @@ class RegisterController extends Controller
             'name' => $data['name'],
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
+            'google2fa_secret' => $data['google2fa_secret'],
         ]);
+    }
+
+    public function register(Request $request)
+    {
+        //validate the incoming request using the already included validator method
+        $this->validator($request->all())->validate();
+
+        //initialize the 2FA class
+        $google2fa = app('pragmarx.google2fa');
+
+        //save the registration data in an array
+        $registration_data = $request->all();
+
+        //add the secret key to the registration data
+        $registration_data["google2fa_secret"] = $google2fa->generateSecretKey();
+
+        //save the registration data to the user session for just the next request
+        $request->session()->flash('registration_data', $registration_data);
+
+        //generate the QR image. this is the image the user will scan with their app
+        // to set up two factor authentication
+        $QR_Image = $google2fa->getQRCodeInline(
+            config('app.name'),
+            $registration_data['email'],
+            $registration_data['google2fa_secret']
+        );
+
+        //pass the QR barcode image to our view
+
+        return view('google2fa.register',['QR_Image' => $QR_Image, 'secret' => $registration_data['google2fa_secret']]);
+    }
+
+    public function completeRegistration(Request $request)
+    {
+        $request->merge(session('registration_data'));
+        return $this->registration($request);
     }
 }
